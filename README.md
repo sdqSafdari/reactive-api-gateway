@@ -24,7 +24,7 @@ Each supported **monitoring system** has an implementation of MeterRegistry.
 How a registry is created varies for each implementation.    
 
 Micrometer employs a naming convention that separates lowercase words with a . (dot) character.(e.g. *api.gateway.routed.error*)
-Each MeterRegistry convert the standard name to its monitoring system convention.(e.g. Prometheus *api_gateway_roputed_error*)
+Each MeterRegistry convert the standard name to its monitoring system convention.(e.g. Prometheus *api_gateway_routed_error*)
 
 ### Metrics
 Spring Webflux register observation beans in `WebFluxObservationAutoConfiguration` class and register bean 
