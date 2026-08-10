@@ -14,7 +14,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Component
-public class SpanEnrichingWebFilter implements WebFilter, Ordered {
+public class SecurityContextSpanEnricherWebFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {

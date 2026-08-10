@@ -85,7 +85,7 @@ How MicroMeter works:
    On each signal (via .tap() or the automatic propagation hook), the current-observation pointer is restored into ThreadLocal on whichever thread is executing, openScope() fires, onScopeOpened() runs on every matching handler, and MDC gets populated for that thread, for that signal
 4. When the chain completes, stop() fires, fanning out onStop() to every handler — ending the span, recording the timer/metric, and so on
 
-
+Each Observation object corresponds with one Span, it has one Observation.Context with one contextualName witch corresponds to the Span name.    
 **TracingContext** object is also in Observation Object. and it includes traceId and spanId and parentSpanId.    
 Spring Webflux put Observation Object in reactor Context(from `reactor.util.context.Context`)    
 ```
