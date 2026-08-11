@@ -81,8 +81,34 @@ services:
       - "4318:4318"   # OTLP HTTP — or here, if using HTTP transport
     depends_on:
       - zipkin
+      - elasticsearch
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # local dev only — enable + add api_key auth for anything real
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.5.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
     restart: unless-stopped
 
 volumes:
   postgres:
   prometheus_data:
+  esdata01:

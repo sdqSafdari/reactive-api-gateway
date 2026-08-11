@@ -16,7 +16,17 @@ exporters:
     endpoint: "http://zipkin:9411/api/v2/spans"
     tls:
       insecure: true
-  # Optional: prints every received span to the collector's own logs.
+  elasticsearch:
+    # elasticsearchexporter
+    endpoints: ["http://elasticsearch:9200"]
+    # No logs_index here on purpose: default mapping::mode is "otel", which
+    # expects dynamic data stream routing (logs-<dataset>.otel-<namespace>),
+    # not a fixed plain index name. Setting logs_index alongside otel mode
+    # is explicitly discouraged and can cause silent bulk indexing failures.
+
+    # No auth needed for this local, security-disabled ES container.
+    # For a real cluster, add: api_key or user/password here instead.
+  # Optional: prints every received signal to the collector's own logs.
   # Handy for confirming your app is actually sending anything at all.
   debug:
     verbosity: detailed
@@ -27,3 +37,7 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [zipkin, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [elasticsearch, debug]
