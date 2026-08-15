@@ -11,6 +11,46 @@ processors:
     timeout: 1s
     send_batch_size: 1024
 
+  tail_sampling:
+    # How long to wait, per trace, before making a final keep/drop decision.
+    # Must be long enough for the slowest span in a trace to arrive.
+    decision_wait: 10s
+    # Rough cap on traces held in memory awaiting a decision.
+    num_traces: 100000
+    expected_new_traces_per_sec: 10
+    policies:
+      # Always keep anything that errored — the traces you actually care about.
+      # below status_code refers to span status code 'otel.status_code' and has nothing to do with http status code
+      # Per HTTP semantic conventions, server spans generally only get Status = ERROR for 5xx responses or unhandled exceptions — a 4xx client error typically leaves the span's status as UNSET, not ERROR
+      - name: errors-policy
+        type: status_code
+        status_code:
+          status_codes: [ ERROR ]
+
+      # Micrometer's HTTP observation tags each span with "outcome":
+      # SUCCESS / CLIENT_ERROR / SERVER_ERROR / REDIRECTION / INFORMATIONAL.
+      # This catches 4xx traffic that status_code above misses entirely.
+      # Verify "outcome" is the real attribute key on your spans (check the
+      # debug exporter output) before relying on this — semconv naming varies.
+      - name: bad-outcome-policy
+        type: string_attribute
+        string_attribute:
+          key: outcome
+          values: [ "CLIENT_ERROR", "SERVER_ERROR" ]
+
+      # Always keep slow requests, even if they didn't error.
+      - name: slow-traces-policy
+        type: latency
+        latency:
+          threshold_ms: 500
+      # For everything else (fast, successful requests), keep only a sample —
+      # enough to see normal traffic patterns without storing every single one.
+      - name: baseline-policy
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+
 exporters:
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
@@ -35,7 +75,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [tail_sampling, batch]
       exporters: [zipkin, debug]
     logs:
       receivers: [otlp]
