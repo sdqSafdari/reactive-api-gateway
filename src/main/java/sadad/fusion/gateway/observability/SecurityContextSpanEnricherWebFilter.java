@@ -31,8 +31,8 @@ public class SecurityContextSpanEnricherWebFilter implements WebFilter, Ordered 
                     if (observation != null) {
                         observation.highCardinalityKeyValue("user.id", auth.getName());
                     }
-                    return chain.filter(exchange);
+                    return Mono.empty();
                 }))
-                .switchIfEmpty(chain.filter(exchange)); // unauthenticated requests just proceed untagged
+                .then(chain.filter(exchange)); // runs exactly once, regardless of auth branch
     }
 }
