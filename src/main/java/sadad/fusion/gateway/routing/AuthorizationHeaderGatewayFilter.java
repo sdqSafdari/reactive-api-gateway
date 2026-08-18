@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import sadad.fusion.gateway.security.OidcUserPrincipal;
 
 public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
@@ -20,9 +21,9 @@ public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
                 .mapNotNull(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
                 .flatMap(authentication -> Mono.justOrEmpty(authentication.getPrincipal())
-                        .ofType(OidcUser.class))
+                        .ofType(OidcUserPrincipal.class))
                 .map(oidcUser -> {
-                    String token = oidcUser.getIdToken().getTokenValue();
+                    String token = oidcUser.getAccessToken().getTokenValue();
                     return exchange.mutate()
                             .request(builder -> builder.headers(headers -> headers.setBearerAuth(token)))
                             .build();
