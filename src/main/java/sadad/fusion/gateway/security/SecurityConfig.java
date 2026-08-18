@@ -7,11 +7,16 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultReactiveOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -39,7 +44,7 @@ public class SecurityConfig {
     public ClientRegistration keycloakClientRegistration(){
         return ClientRegistration.withRegistrationId("keycloak")//client code
                 .clientId("sadad_api-gateway")
-                .clientSecret("1zYDtZsB1EFeR6FTXTfRZBMHECCq6jgE")
+                .clientSecret("Arp82iJhkaV7foWyHEDoTgMUAtgsPFIe")
                 .redirectUri("{baseUrl}/login/oauth2/code/")
                 .scope("openid","profile") // improve to OIDC1, which provides id_token in addition to access_token
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)//Authorization code flow grant type
@@ -67,5 +72,28 @@ public class SecurityConfig {
 
         });
         return defaultServerOAuth2AuthorizationRequestResolver;
+    }
+
+    /**
+     * The access token in Authorization Code flow is deliberately not attached to the Authentication/SecurityContext
+     * it's stored separately in an OAuth2AuthorizedClient, retrievable via OAuth2AuthorizedClientService / OAuth2AuthorizedClientRepository
+     * org.springframework.cloud.gateway.filter.factory.TokenRelayGatewayFilterFactory uses this bean to retrieve the access token
+     */
+    @Bean
+    public ReactiveOAuth2AuthorizedClientManager authorizedClientManager(
+            ReactiveClientRegistrationRepository clientRegistrationRepository,
+            ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
+
+        ReactiveOAuth2AuthorizedClientProvider authorizedClientProvider =
+                ReactiveOAuth2AuthorizedClientProviderBuilder.builder()
+                        .authorizationCode()
+                        .refreshToken()   // <-- this is what enables silent refresh
+                        .build();
+
+        DefaultReactiveOAuth2AuthorizedClientManager manager =
+                new DefaultReactiveOAuth2AuthorizedClientManager(
+                        clientRegistrationRepository, authorizedClientRepository);
+        manager.setAuthorizedClientProvider(authorizedClientProvider);
+        return manager;
     }
 }

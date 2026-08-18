@@ -5,5 +5,5 @@ gateway.mocked.routes:
       - Path=/w1/**
     filters:
         - StripPrefix=1  # Strips the first path segment (/w1/)
-        - AuthorizationHeader
+        - TokenRelay
     order: 0

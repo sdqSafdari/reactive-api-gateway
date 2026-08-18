@@ -13,6 +13,9 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import sadad.fusion.gateway.security.OidcUserPrincipal;
 
+/**
+ * a GatewayFilter to fill Authorization header with OIDC id-token
+ */
 public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
     @Override
@@ -21,9 +24,9 @@ public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
                 .mapNotNull(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
                 .flatMap(authentication -> Mono.justOrEmpty(authentication.getPrincipal())
-                        .ofType(OidcUserPrincipal.class))
+                        .ofType(OidcUser.class))
                 .map(oidcUser -> {
-                    String token = oidcUser.getAccessToken().getTokenValue();
+                    String token = oidcUser.getIdToken().getTokenValue();
                     return exchange.mutate()
                             .request(builder -> builder.headers(headers -> headers.setBearerAuth(token)))
                             .build();
