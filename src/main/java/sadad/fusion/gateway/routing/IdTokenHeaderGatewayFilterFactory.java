@@ -5,16 +5,16 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthorizationHeaderGatewayFilterFactory
-        extends AbstractGatewayFilterFactory<AuthorizationHeaderGatewayFilterFactory.Config> {
+public class IdTokenHeaderGatewayFilterFactory
+        extends AbstractGatewayFilterFactory<IdTokenHeaderGatewayFilterFactory.Config> {
 
-    public AuthorizationHeaderGatewayFilterFactory() {
+    public IdTokenHeaderGatewayFilterFactory() {
         super(Config.class);
     }
 
     @Override
     public GatewayFilter apply(Config config) {
-        return new AuthorizationHeaderGatewayFilter();
+        return new IdTokenHeaderGatewayFilter();
     }
 
     public static class Config {

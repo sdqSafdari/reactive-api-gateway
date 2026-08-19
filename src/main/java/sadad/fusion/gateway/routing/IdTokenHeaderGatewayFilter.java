@@ -7,16 +7,14 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import sadad.fusion.gateway.security.OidcUserPrincipal;
 
 /**
  * a GatewayFilter to fill Authorization header with OIDC id-token
  */
-public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
+public class IdTokenHeaderGatewayFilter implements GatewayFilter {
     private Logger log = LoggerFactory.getLogger(this.getClass());
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -28,7 +26,7 @@ public class AuthorizationHeaderGatewayFilter implements GatewayFilter {
                 .map(oidcUser -> {
                     String token = oidcUser.getIdToken().getTokenValue();
                     return exchange.mutate()
-                            .request(builder -> builder.headers(headers -> headers.setBearerAuth(token)))
+                            .request(builder -> builder.headers(headers -> headers.add("X-ID-Token",token)))
                             .build();
                 })
                 .defaultIfEmpty(exchange)   // real object, not Mono<Void> — this is safe to switch on
